@@ -507,7 +507,25 @@ function init() {
 function loadState() {
   const saved = localStorage.getItem('wc2026_prediction');
   if (saved) {
-    state = JSON.parse(saved);
+    try {
+      const parsed = JSON.parse(saved);
+      // Validate state structure
+      const allSelected = Object.values(parsed.groupTop2 || {}).flat();
+      const groupCount = Object.keys(parsed.groupTop2 || {}).length;
+      const thirdCount = (parsed.bestThirds || []).length;
+
+      // If state seems corrupted (e.g., more than 2 per group, or inconsistent), clear it
+      const hasInvalidGroup = Object.values(parsed.groupTop2 || {}).some(arr => arr.length > 2);
+      if (hasInvalidGroup || (groupCount > 0 && allSelected.length !== groupCount * 2)) {
+        console.warn('Clearing corrupted state');
+        localStorage.removeItem('wc2026_prediction');
+        return;
+      }
+
+      state = parsed;
+    } catch(e) {
+      localStorage.removeItem('wc2026_prediction');
+    }
   }
 }
 
