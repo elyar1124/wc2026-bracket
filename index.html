@@ -544,8 +544,9 @@ function getMatchWinner(matchId) {
 }
 
 function resolvePosition(pos) {
-  if (pos.type === 'group') {
-    return getTeam(pos.group, pos.pos);
+  if (pos.group && pos.pos !== undefined) {
+    const teamId = getTeam(pos.group, pos.pos);
+    return teamId ? getTeamById(teamId) : null;
   }
   if (pos.type === 'third') {
     return getThirdTeam(pos.index);
