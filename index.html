@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026世界杯晋级竞猜</title>
+  <style>
+    :root {
+      --red: #D32F2F;
+      --blue: #1565C0;
+      --white: #FFFFFF;
+      --gray: #F5F5F5;
+      --border: #E0E0E0;
+      --text: #212121;
+      --text-light: #757575;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--red) 0%, var(--blue) 100%);
+      color: white;
+      padding: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .progress-bar {
+      margin-top: 10px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 10px;
+      height: 20px;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: white;
+      border-radius: 10px;
+      transition: width 0.3s;
+    }
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .champion-display {
+      margin-top: 8px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* Steps */
+    .steps-nav {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .step-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 12px 8px;
+      border: none;
+      background: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+    }
+    .step-btn.active { color: var(--red); border-bottom-color: var(--red); }
+    .step-btn.completed { color: #4CAF50; }
+
+    /* Container */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* Step Content */
+    .step-content { display: none; }
+    .step-content.active { display: block; }
+
+    /* Group Card */
+    .group-card {
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .group-header {
+      background: var(--blue);
+      color: white;
+      padding: 12px 16px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .group-header .selected-count { font-size: 12px; opacity: 0.8; }
+    .group-teams { padding: 12px; }
+    .team-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      margin: 4px 0;
+      background: var(--gray);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .team-item:hover { background: #E3F2FD; }
+    .team-item.selected { background: #BBDEFB; border: 2px solid var(--blue); }
+    .team-item.locked { opacity: 0.5; cursor: not-allowed; }
+    .team-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .team-item.selected .team-checkbox {
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+    .team-item.selected .team-checkbox::after {
+      content: '✓';
+      color: white;
+      font-size: 14px;
+    }
+
+    /* Third Place Section */
+    .third-place-header {
+      text-align: center;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .third-place-header h2 { color: var(--red); margin-bottom: 8px; }
+    .third-place-header p { color: var(--text-light); font-size: 14px; }
+    .selection-count {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--blue);
+      margin-top: 12px;
+    }
+    .third-teams-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .third-team-item {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .third-team-item:hover { background: #E3F2FD; }
+    .third-team-item.selected { background: #BBDEFB; border: 2px solid var(--blue); }
+    .third-team-item.locked { opacity: 0.5; cursor: not-allowed; }
+
+    /* Knockout Bracket */
+    .bracket-container { overflow-x: auto; padding-bottom: 20px; }
+    .bracket {
+      display: flex;
+      min-width: 700px;
+      padding: 20px 0;
+    }
+    .bracket-round {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+    }
+    .round-title {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 10px;
+      padding: 0 10px;
+    }
+    .bracket-match {
+      background: white;
+      border-radius: 8px;
+      margin: 4px 8px;
+      padding: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .match-label {
+      font-size: 10px;
+      color: var(--text-light);
+      margin-bottom: 4px;
+    }
+    .match-team {
+      padding: 8px;
+      margin: 2px 0;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      background: var(--gray);
+      transition: all 0.2s;
+    }
+    .match-team:hover { background: #E3F2FD; }
+    .match-team.selected { background: var(--blue); color: white; }
+    .match-team.locked { cursor: not-allowed; }
+    .match-team.tbd { color: var(--text-light); font-style: italic; }
+    .bracket-lines {
+      position: relative;
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      padding: 16px 0;
+    }
+    .btn {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset {
+      background: white;
+      color: var(--red);
+      border: 2px solid var(--red);
+    }
+    .btn-reset:hover { background: #FFEBEE; }
+    .btn-submit {
+      background: var(--blue);
+      color: white;
+    }
+    .btn-submit:hover { background: #0D47A1; }
+    .btn-submit:disabled {
+      background: var(--border);
+      cursor: not-allowed;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #323232;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 200;
+      animation: fadeIn 0.3s;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+    }
+    .modal { background: white; border-radius: 16px; padding: 24px; max-width: 320px; width: 90%; text-align: center; }
+    .modal h3 { margin-bottom: 12px; color: var(--blue); }
+    .modal p { color: var(--text-light); margin-bottom: 20px; font-size: 14px; }
+    .modal-btns { display: flex; gap: 12px; }
+    .modal-btns .btn { flex: 1; padding: 12px; font-size: 14px; }
+
+    /* Completed */
+    .completed-badge {
+      display: inline-block;
+      background: #4CAF50;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .third-teams-grid { grid-template-columns: 1fr; }
+      .btn-group { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🏆 2026 世界杯晋级竞猜</h1>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      <div class="progress-text" id="progressText">小组赛: 0/24 已选</div>
+    </div>
+    <div class="champion-display" id="championDisplay">预测冠军: 未选择</div>
+  </div>
+
+  <div class="steps-nav">
+    <button class="step-btn active" data-step="1">① 小组赛</button>
+    <button class="step-btn" data-step="2">② 第三名</button>
+    <button class="step-btn" data-step="3">③ 淘汰赛</button>
+  </div>
+
+  <div class="container">
+    <!-- Step 1: Group Stage -->
+    <div class="step-content active" id="step1">
+      <p style="text-align:center;color:var(--text-light);margin-bottom:16px;font-size:14px;">
+        请为每个小组选择前两名出线的球队
+      </p>
+      <div id="groupsContainer"></div>
+    </div>
+
+    <!-- Step 2: Best Third Place -->
+    <div class="step-content" id="step2">
+      <div class="third-place-header">
+        <h2>🏅 最佳第三名晋级</h2>
+        <p>从未能小组出线的24支球队中，选出8支成绩最好的第三名</p>
+        <div class="selection-count"><span id="thirdSelected">0</span> / 8 已选</div>
+      </div>
+      <div class="third-teams-grid" id="thirdTeamsContainer"></div>
+    </div>
+
+    <!-- Step 3: Knockout -->
+    <div class="step-content" id="step3">
+      <div class="bracket-container">
+        <div class="bracket" id="bracketContainer"></div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-group">
+      <button class="btn btn-reset" onclick="resetAll()">重置全部</button>
+      <button class="btn btn-submit" id="submitBtn" onclick="submitPrediction()">提交预测</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" style="display:none;"></div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal" style="display:none;">
+    <div class="modal">
+      <h3>🎉 预测已锁定</h3>
+      <p id="modalText">你的世界杯预测已保存！</p>
+      <div class="modal-btns">
+        <button class="btn btn-reset" onclick="closeModal()">继续修改</button>
+        <button class="btn btn-submit" onclick="confirmSubmission()">确认</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const WC2026_DATA = {
+  "groups": {
+    "A": ["Mexico", "South Africa", "Korea Republic", "Czechia"],
+    "B": ["Canada", "Bosnia and Herzegovina", "Qatar", "Switzerland"],
+    "C": ["Brazil", "Morocco", "Haiti", "Scotland"],
+    "D": ["United States", "Paraguay", "Australia", "Turkey"],
+    "E": ["Germany", "Curaçao", "Ivory Coast", "Ecuador"],
+    "F": ["Netherlands", "Japan", "Sweden", "Tunisia"],
+    "G": ["Belgium", "Egypt", "Iran", "New Zealand"],
+    "H": ["Spain", "Cape Verde", "Saudi Arabia", "Uruguay"],
+    "I": ["France", "Senegal", "Iraq", "Norway"],
+    "J": ["Argentina", "Algeria", "Austria", "Jordan"],
+    "K": ["Portugal", "DR Congo", "Uzbekistan", "Colombia"],
+    "L": ["England", "Croatia", "Ghana", "Panama"]
+  },
+  "knockout_bracket": {
+    "round_of_32": [
+      { "id": "R32-1", "home": "A1", "away": "B2" },
+      { "id": "R32-2", "home": "C1", "away": "D2" },
+      { "id": "R32-3", "home": "E1", "away": "F2" },
+      { "id": "R32-4", "home": "G1", "away": "H2" },
+      { "id": "R32-5", "home": "I1", "away": "J2" },
+      { "id": "R32-6", "home": "K1", "away": "L2" },
+      { "id": "R32-7", "home": "D1", "away": "C2" },
+      { "id": "R32-8", "home": "B1", "away": "A2" },
+      { "id": "R32-9", "home": "H1", "away": "G2" },
+      { "id": "R32-10", "home": "F1", "away": "E2" },
+      { "id": "R32-11", "home": "L1", "away": "K2" },
+      { "id": "R32-12", "home": "J1", "away": "I2" },
+      { "id": "R32-13", "home": "3rd-1", "away": "3rd-2" },
+      { "id": "R32-14", "home": "3rd-3", "away": "3rd-4" },
+      { "id": "R32-15", "home": "3rd-5", "away": "3rd-6" },
+      { "id": "R32-16", "home": "3rd-7", "away": "3rd-8" }
+    ],
+    "round_of_16": [
+      { "id": "R16-1", "home": "R32-1", "away": "R32-8" },
+      { "id": "R16-2", "home": "R32-2", "away": "R32-7" },
+      { "id": "R16-3", "home": "R32-3", "away": "R32-10" },
+      { "id": "R16-4", "home": "R32-4", "away": "R32-9" },
+      { "id": "R16-5", "home": "R32-5", "away": "R32-12" },
+      { "id": "R16-6", "home": "R32-6", "away": "R32-11" },
+      { "id": "R16-7", "home": "R32-13", "away": "R32-16" },
+      { "id": "R16-8", "home": "R32-14", "away": "R32-15" }
+    ],
+    "quarter_finals": [
+      { "id": "QF-1", "home": "R16-1", "away": "R16-2" },
+      { "id": "QF-2", "home": "R16-3", "away": "R16-4" },
+      { "id": "QF-3", "home": "R16-5", "away": "R16-6" },
+      { "id": "QF-4", "home": "R16-7", "away": "R16-8" }
+    ],
+    "semi_finals": [
+      { "id": "SF-1", "home": "QF-1", "away": "QF-2" },
+      { "id": "SF-2", "home": "QF-3", "away": "QF-4" }
+    ],
+    "finals": {
+      "third_place": { "id": "3rd", "home": "SF-1", "away": "SF-2", "isLoser": true },
+      "championship": { "id": "Final", "home": "SF-1", "away": "SF-2", "isLoser": false }
+    }
+  }
+};
+
+const ROUND_NAMES = {
+  "round_of_32": "32强",
+  "round_of_16": "16强",
+  "quarter_finals": "8强",
+  "semi_finals": "4强",
+  "finals": "决赛"
+};
+
+let state = {
+  groupTop2: {},
+  bestThirds: [],
+  knockout: {},
+  isSubmitted: false
+};
+
+function init() {
+  loadState();
+  renderGroups();
+  renderThirdTeams();
+  renderBracket();
+  updateProgress();
+  updateChampionDisplay();
+  updateStepButtons();
+}
+
+function loadState() {
+  const saved = localStorage.getItem('wc2026_prediction');
+  if (saved) {
+    state = JSON.parse(saved);
+  }
+}
+
+function saveState() {
+  localStorage.setItem('wc2026_prediction', JSON.stringify(state));
+}
+
+function renderGroups() {
+  const container = document.getElementById('groupsContainer');
+  container.innerHTML = '';
+
+  Object.keys(WC2026_DATA.groups).forEach(group => {
+    const teams = WC2026_DATA.groups[group];
+    const selected = state.groupTop2[group] || [];
+
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.innerHTML = `
+      <div class="group-header">
+        <span>Group ${group}</span>
+        <span class="selected-count">${selected.length}/2</span>
+      </div>
+      <div class="group-teams">
+        ${teams.map(team => {
+          const isSelected = selected.includes(team);
+          return `
+          <div class="team-item ${isSelected ? 'selected' : ''}" onclick="toggleGroupTeam('${group}', '${team}')">
+            <div class="team-checkbox"></div>
+            <span>${team}</span>
+          </div>
+        `}).join('')}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function toggleGroupTeam(group, team) {
+  if (state.isSubmitted) return;
+
+  if (!state.groupTop2[group]) state.groupTop2[group] = [];
+
+  const idx = state.groupTop2[group].indexOf(team);
+  if (idx > -1) {
+    state.groupTop2[group].splice(idx, 1);
+  } else {
+    if (state.groupTop2[group].length >= 2) {
+      showToast('每组只能选2支球队');
+      return;
+    }
+    state.groupTop2[group].push(team);
+  }
+
+  saveState();
+  renderGroups();
+  updateProgress();
+  updateStepButtons();
+  renderThirdTeams();
+  renderBracket();
+}
+
+function renderThirdTeams() {
+  const container = document.getElementById('thirdTeamsContainer');
+  const allSelectedTeams = Object.values(state.groupTop2).flat();
+  const thirdCandidates = [];
+
+  Object.keys(WC2026_DATA.groups).forEach(group => {
+    const groupTeams = WC2026_DATA.groups[group];
+    groupTeams.forEach(team => {
+      if (!allSelectedTeams.includes(team)) {
+        thirdCandidates.push(team);
+      }
+    });
+  });
+
+  thirdCandidates.sort();
+  container.innerHTML = thirdCandidates.map(team => {
+    const isSelected = state.bestThirds.includes(team);
+    return `
+      <div class="third-team-item ${isSelected ? 'selected' : ''}" onclick="toggleThirdTeam('${team}')">
+        <div class="team-checkbox" style="margin-right:10px;width:20px;height:20px;border-radius:4px;"></div>
+        <span>${team}</span>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('thirdSelected').textContent = state.bestThirds.length;
+}
+
+function toggleThirdTeam(team) {
+  if (state.isSubmitted) return;
+
+  const idx = state.bestThirds.indexOf(team);
+  if (idx > -1) {
+    state.bestThirds.splice(idx, 1);
+  } else {
+    if (state.bestThirds.length >= 8) {
+      showToast('最多只能选8支球队');
+      return;
+    }
+    state.bestThirds.push(team);
+  }
+
+  saveState();
+  renderThirdTeams();
+  renderBracket();
+  updateStepButtons();
+}
+
+function getTeamFromPosition(pos) {
+  const [type, index] = pos.split('-');
+
+  if (type === 'A' || type === 'B' || type === 'C' || type === 'D' ||
+      type === 'E' || type === 'F' || type === 'G' || type === 'H' ||
+      type === 'I' || type === 'J' || type === 'K' || type === 'L') {
+    const groupTeams = WC2026_DATA.groups[type];
+    const idx = parseInt(index) - 1;
+    return groupTeams ? groupTeams[idx] : null;
+  }
+
+  if (type === '3rd') {
+    const idx = parseInt(index) - 1;
+    return state.bestThirds[idx] || null;
+  }
+
+  return null;
+}
+
+function getMatchWinner(matchId) {
+  return state.knockout[matchId] || null;
+}
+
+function resolvePosition(pos) {
+  if (pos.startsWith('R32-')) return getMatchWinner(pos) || pos;
+  if (pos.startsWith('R16-')) return getMatchWinner(pos) || pos;
+  if (pos.startsWith('QF-')) return getMatchWinner(pos) || pos;
+  if (pos.startsWith('SF-')) return getMatchWinner(pos) || pos;
+  if (pos === 'SF-1' || pos === 'SF-2') {
+    const sf = WC2026_DATA.knockout_bracket.semi_finals.find(s => s.id === pos);
+    if (!sf) return pos;
+    const homeWinner = getMatchWinner(sf.home);
+    const awayWinner = getMatchWinner(sf.away);
+    return { home: homeWinner || sf.home, away: awayWinner || sf.away, isLoser: false };
+  }
+  if (pos === '3rd' || pos === 'Final') {
+    const final = WC2026_DATA.knockout_bracket.finals[pos];
+    if (!final) return pos;
+    const homeWinner = getMatchWinner(final.home);
+    const awayWinner = getMatchWinner(final.away);
+    if (final.isLoser) {
+      return {
+        home: homeWinner ? getLoserOfMatch(final.home) : null,
+        away: awayWinner ? getLoserOfMatch(final.away) : null,
+        isLoser: true
+      };
+    }
+    return { home: homeWinner || final.home, away: awayWinner || final.away, isLoser: false };
+  }
+  return pos;
+}
+
+function getLoserOfMatch(matchId) {
+  const matches = {
+    ...WC2026_DATA.knockout_bracket.round_of_32,
+    ...WC2026_DATA.knockout_bracket.round_of_16,
+    ...WC2026_DATA.knockout_bracket.quarter_finals,
+    ...WC2026_DATA.knockout_bracket.semi_finals
+  };
+  return matches[matchId] ? null : null;
+}
+
+function renderBracket() {
+  const container = document.getElementById('bracketContainer');
+  const rounds = ['round_of_32', 'round_of_16', 'quarter_finals', 'semi_finals', 'finals'];
+
+  let html = '';
+
+  rounds.forEach((roundKey, roundIndex) => {
+    const matches = roundKey === 'finals'
+      ? [WC2026_DATA.knockout_bracket.finals.championship]
+      : WC2026_DATA.knockout_bracket[roundKey];
+
+    const roundName = roundKey === 'finals' ? '决赛' : ROUND_NAMES[roundKey];
+
+    html += `<div class="bracket-round">
+      <div class="round-title">${roundName}</div>`;
+
+    matches.forEach(match => {
+      let homeTeam, awayTeam;
+
+      if (roundKey === 'finals') {
+        const homeResolved = resolvePosition(match.home);
+        const awayResolved = resolvePosition(match.away);
+        homeTeam = typeof homeResolved === 'object' ? homeResolved.home : homeResolved;
+        awayTeam = typeof awayResolved === 'object' ? awayResolved.away : awayResolved;
+      } else {
+        homeTeam = getMatchWinner(match.home) || getTeamFromPosition(match.home) || match.home;
+        awayTeam = getMatchWinner(match.away) || getTeamFromPosition(match.away) || match.away;
+      }
+
+      const isSelected = state.knockout[match.id];
+
+      html += `<div class="bracket-match">
+        <div class="match-label">${match.id}</div>
+        <div class="match-team ${!homeTeam || homeTeam.startsWith('R') || homeTeam.startsWith('QF') || homeTeam.startsWith('SF') || homeTeam.startsWith('3rd') || homeTeam.startsWith('A') || homeTeam.startsWith('B') || homeTeam.startsWith('C') || homeTeam.startsWith('D') || homeTeam.startsWith('E') || homeTeam.startsWith('F') || homeTeam.startsWith('G') || homeTeam.startsWith('H') || homeTeam.startsWith('I') || homeTeam.startsWith('J') || homeTeam.startsWith('K') || homeTeam.startsWith('L') ? '' : ''}" onclick="selectMatchWinner('${match.id}', '${homeTeam}')" ${!homeTeam || homeTeam.startsWith('R') || homeTeam.startsWith('3rd') ? 'locked' : ''}>
+          ${homeTeam || '待定'}
+        </div>
+        <div class="match-team" onclick="selectMatchWinner('${match.id}', '${awayTeam}')" ${!awayTeam || awayTeam.startsWith('R') || awayTeam.startsWith('3rd') ? 'locked' : ''}>
+          ${awayTeam || '待定'}
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function selectMatchWinner(matchId, team) {
+  if (state.isSubmitted) return;
+  if (!team || team.startsWith('R') || team.startsWith('QF') || team.startsWith('SF') || team.startsWith('3rd')) {
+    return;
+  }
+
+  state.knockout[matchId] = team;
+  propagateKnockoutWinners();
+  saveState();
+  renderBracket();
+  updateChampionDisplay();
+}
+
+function propagateKnockoutWinners() {
+  const r32 = WC2026_DATA.knockout_bracket.round_of_32;
+  const r16 = WC2026_DATA.knockout_bracket.round_of_16;
+  const qf = WC2026_DATA.knockout_bracket.quarter_finals;
+  const sf = WC2026_DATA.knockout_bracket.semi_finals;
+
+  r16.forEach(match => {
+    const homeWinner = getMatchWinner(match.home);
+    const awayWinner = getMatchWinner(match.away);
+    if (homeWinner && awayWinner && !state.knockout[match.id]) {
+    }
+  });
+
+  qf.forEach(match => {
+    const homeWinner = getMatchWinner(match.home);
+    const awayWinner = getMatchWinner(match.away);
+    if (homeWinner && awayWinner && !state.knockout[match.id]) {
+    }
+  });
+
+  sf.forEach(match => {
+    const homeWinner = getMatchWinner(match.home);
+    const awayWinner = getMatchWinner(match.away);
+    if (homeWinner && awayWinner && !state.knockout[match.id]) {
+    }
+  });
+}
+
+function updateProgress() {
+  const totalSelected = Object.values(state.groupTop2).flat().length;
+  const thirdSelected = state.bestThirds.length;
+  const progress = Math.round((totalSelected / 24) * 100);
+
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressText').textContent = `小组赛: ${totalSelected}/24 已选`;
+}
+
+function updateChampionDisplay() {
+  const final = getMatchWinner('Final');
+  if (final) {
+    document.getElementById('championDisplay').textContent = `🏆 预测冠军: ${final}`;
+  } else {
+    document.getElementById('championDisplay').textContent = '预测冠军: 未选择';
+  }
+}
+
+function updateStepButtons() {
+  const totalSelected = Object.values(state.groupTop2).flat().length;
+  const step1Complete = totalSelected === 24;
+  const step2Complete = state.bestThirds.length === 8;
+
+  const stepBtns = document.querySelectorAll('.step-btn');
+  stepBtns[0].classList.toggle('completed', step1Complete);
+  stepBtns[1].classList.toggle('completed', step2Complete);
+
+  document.getElementById('submitBtn').disabled = !(step1Complete && step2Complete);
+}
+
+function switchStep(step) {
+  document.querySelectorAll('.step-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.step === step);
+  });
+  document.querySelectorAll('.step-content').forEach(content => {
+    content.classList.toggle('active', content.id === `step${step}`);
+  });
+}
+
+document.querySelectorAll('.step-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchStep(btn.dataset.step));
+});
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 2000);
+}
+
+function resetAll() {
+  if (confirm('确定要重置所有预测吗？')) {
+    state = { groupTop2: {}, bestThirds: [], knockout: {}, isSubmitted: false };
+    saveState();
+    renderGroups();
+    renderThirdTeams();
+    renderBracket();
+    updateProgress();
+    updateChampionDisplay();
+    updateStepButtons();
+    showToast('已重置全部预测');
+  }
+}
+
+function submitPrediction() {
+  const final = getMatchWinner('Final');
+  document.getElementById('modalText').textContent = final
+    ? `你预测的冠军是 ${final}！确定要锁定预测吗？`
+    : '你还未选择冠军，确定要提交吗？';
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+function confirmSubmission() {
+  state.isSubmitted = true;
+  saveState();
+  closeModal();
+  showToast('✅ 预测已锁定！');
+  renderGroups();
+  renderThirdTeams();
+  renderBracket();
+}
+
+init();
+</script>
+</body>
+</html>
